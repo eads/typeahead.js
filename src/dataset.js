@@ -20,7 +20,7 @@ var Dataset = (function() {
     }
 
     if (!o.local && !o.prefetch && !o.remote) {
-      $.error('one of local, prefetch, or remote is required');
+      $.error('one of local, prefetch, remote, or callback is required');
     }
 
     this.name = o.name || utils.getUniqueId();
@@ -34,6 +34,7 @@ var Dataset = (function() {
     // used then deleted in #initialize
     this.local = o.local;
     this.prefetch = o.prefetch;
+    this.callback = o.callback;
     this.remote = o.remote;
 
     this.itemHash = {};
@@ -237,6 +238,7 @@ var Dataset = (function() {
 
       this.local && this._processLocalData(this.local);
       this.transport = this.remote ? new Transport(this.remote) : null;
+      this.callback = this.callback ? new Callback(this.callback): null;
 
       deferred = this.prefetch ?
         this._loadPrefetchData(this.prefetch) :
@@ -259,6 +261,9 @@ var Dataset = (function() {
       terms = utils.tokenizeQuery(query);
       suggestions = this._getLocalSuggestions(terms).slice(0, this.limit);
 
+      if (suggestions.length < this.limit && this.callback) {
+        suggestions = suggestions.concat(this.callback.get(query, processRemoteData));
+      }
       if (suggestions.length < this.limit && this.transport) {
         cacheHit = this.transport.get(query, processRemoteData);
       }
