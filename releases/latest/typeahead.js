@@ -289,6 +289,23 @@
         });
         return RequestCache;
     }();
+    var Callback = function() {
+        function Callback(o) {
+          utils.bindAll(this);
+          o = utils.isFunction(o) ? {
+              data: o
+          } : o;
+          // @TODO allow throttling
+          this.fn = o.data;
+        }
+        utils.mixin(Callback.prototype, {
+            get: function(query, cb) {
+              var data = this.fn.call(this, query);
+              cb && cb(data);
+            }
+        });
+        return Callback;
+    }();
     var Transport = function() {
         var pendingRequestsCount = 0, pendingRequests = {}, maxPendingRequests, requestCache;
         function Transport(o) {
@@ -378,8 +395,8 @@
             if (utils.isString(o.template) && !o.engine) {
                 $.error("no template engine specified");
             }
-            if (!o.local && !o.prefetch && !o.remote) {
-                $.error("one of local, prefetch, or remote is required");
+            if (!o.local && !o.prefetch && !o.remote && !o.callback) {
+                $.error("one of local, prefetch, remote, or callback is required");
             }
             this.name = o.name || utils.getUniqueId();
             this.limit = o.limit || 5;
@@ -389,6 +406,7 @@
             this.valueKey = o.valueKey || "value";
             this.template = compileTemplate(o.template, o.engine, this.valueKey);
             this.local = o.local;
+            this.callback = o.callback;
             this.prefetch = o.prefetch;
             this.remote = o.remote;
             this.itemHash = {};
@@ -512,6 +530,7 @@
                 var deferred;
                 this.local && this._processLocalData(this.local);
                 this.transport = this.remote ? new Transport(this.remote) : null;
+                this.callback = this.callback ? new Callback(this.callback): null;
                 deferred = this.prefetch ? this._loadPrefetchData(this.prefetch) : $.Deferred().resolve();
                 this.local = this.prefetch = this.remote = null;
                 this.initialize = function() {
@@ -526,6 +545,9 @@
                 }
                 terms = utils.tokenizeQuery(query);
                 suggestions = this._getLocalSuggestions(terms).slice(0, this.limit);
+                if (suggestions.length < this.limit && this.callback) {
+                    cacheHit = this.callback.get(query, processRemoteData);
+                }
                 if (suggestions.length < this.limit && this.transport) {
                     cacheHit = this.transport.get(query, processRemoteData);
                 }
