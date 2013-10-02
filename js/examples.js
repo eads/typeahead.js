@@ -1,7 +1,17 @@
 $(document).ready(function() {
   $('.example-countries .typeahead').typeahead({
     name: 'countries',
-    prefetch: '../data/countries.json',
+    callback: {
+      data: function(input) {
+          var i = 0;
+          var items = [];
+          while (i < 100) {
+              i += 1;
+              items.push("foo" + i);
+          }
+          return items;
+      }
+    },
     limit: 10
   });
 

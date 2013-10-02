@@ -295,7 +295,6 @@
           o = utils.isFunction(o) ? {
               data: o
           } : o;
-          // @TODO allow throttling
           this.fn = o.data;
         }
         utils.mixin(Callback.prototype, {
