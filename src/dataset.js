@@ -19,7 +19,7 @@ var Dataset = (function() {
       $.error('no template engine specified');
     }
 
-    if (!o.local && !o.prefetch && !o.remote) {
+    if (!o.local && !o.prefetch && !o.remote && !o.callback) {
       $.error('one of local, prefetch, remote, or callback is required');
     }
 
@@ -260,9 +260,8 @@ var Dataset = (function() {
 
       terms = utils.tokenizeQuery(query);
       suggestions = this._getLocalSuggestions(terms).slice(0, this.limit);
-
       if (suggestions.length < this.limit && this.callback) {
-        suggestions = suggestions.concat(this.callback.get(query, processRemoteData));
+        cacheHit = this.callback.get(query, processRemoteData);
       }
       if (suggestions.length < this.limit && this.transport) {
         cacheHit = this.transport.get(query, processRemoteData);

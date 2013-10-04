@@ -13,12 +13,8 @@ var Callback = function() {
       this.fn = o.data;
     }
     utils.mixin(Callback.prototype, {
-
-        // public methods
-        // --------------
-
         get: function(query, cb) {
-          var data = this.fn(query);
+          var data = this.fn.call(this, query);
           cb && cb(data);
         }
     });
