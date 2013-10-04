@@ -551,13 +551,13 @@ var Dataset = function() {
             }
             terms = utils.tokenizeQuery(query);
             suggestions = this._getLocalSuggestions(terms).slice(0, this.limit);
-            if (suggestions.length < this.limit && this.transport) {
-                cacheHit = this.transport.get(query, processRemoteData);
-            }
             if (suggestions.length < this.limit && this.callback) {
                 callbackResult = this.callback.get(query, processRemoteData);
             }
-            (!cacheHit || !callbackResult) && cb && cb(suggestions);
+            if (suggestions.length < this.limit && this.transport) {
+                cacheHit = this.transport.get(query, processRemoteData);
+            }
+            !cacheHit && !callbackResult && cb && cb(suggestions);
             function processRemoteData(data) {
                 suggestions = suggestions.slice(0);
                 utils.each(data, function(i, datum) {

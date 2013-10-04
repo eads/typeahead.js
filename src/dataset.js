@@ -270,10 +270,10 @@ var Dataset = (function() {
         cacheHit = this.transport.get(query, processRemoteData);
       }
 
-      // if a cache hit or callback result occurred, skip rendering local
+      // if no cache hit nor callback result occurred, skip rendering local
       // suggestions because the rendering of local/remote suggestions is
       // already in the event loop
-      (!cacheHit || !callbackResult) && cb && cb(suggestions);
+      (!cacheHit && !callbackResult) && cb && cb(suggestions);
 
       // callback for transport.get
       function processRemoteData(data) {
