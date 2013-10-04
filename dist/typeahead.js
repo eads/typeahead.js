@@ -545,19 +545,19 @@ var Dataset = function() {
             return deferred;
         },
         getSuggestions: function(query, cb) {
-            var that = this, terms, suggestions, cacheHit = false;
+            var that = this, terms, suggestions, cacheHit = false, callbackResult = false;
             if (query.length < this.minLength) {
                 return;
             }
             terms = utils.tokenizeQuery(query);
             suggestions = this._getLocalSuggestions(terms).slice(0, this.limit);
-            if (suggestions.length < this.limit && this.callback) {
-                cacheHit = this.callback.get(query, processRemoteData);
-            }
             if (suggestions.length < this.limit && this.transport) {
                 cacheHit = this.transport.get(query, processRemoteData);
             }
-            !cacheHit && cb && cb(suggestions);
+            if (suggestions.length < this.limit && this.callback) {
+                callbackResult = this.callback.get(query, processRemoteData);
+            }
+            (!cacheHit || !callbackResult) && cb && cb(suggestions);
             function processRemoteData(data) {
                 suggestions = suggestions.slice(0);
                 utils.each(data, function(i, datum) {

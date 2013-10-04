@@ -251,7 +251,8 @@ var Dataset = (function() {
     },
 
     getSuggestions: function(query, cb) {
-      var that = this, terms, suggestions, cacheHit = false;
+      var that = this, terms, suggestions, cacheHit = false,
+          callbackResult = false;
 
       // don't do anything until the minLength constraint is met
       if (query.length < this.minLength) {
@@ -260,17 +261,19 @@ var Dataset = (function() {
 
       terms = utils.tokenizeQuery(query);
       suggestions = this._getLocalSuggestions(terms).slice(0, this.limit);
+
       if (suggestions.length < this.limit && this.callback) {
-        cacheHit = this.callback.get(query, processRemoteData);
+        callbackResult = this.callback.get(query, processRemoteData);
       }
+
       if (suggestions.length < this.limit && this.transport) {
         cacheHit = this.transport.get(query, processRemoteData);
       }
 
-      // if a cache hit occurred, skip rendering local suggestions
-      // because the rendering of local/remote suggestions is already
-      // in the event loop
-      !cacheHit && cb && cb(suggestions);
+      // if a cache hit or callback result occurred, skip rendering local
+      // suggestions because the rendering of local/remote suggestions is
+      // already in the event loop
+      (!cacheHit || !callbackResult) && cb && cb(suggestions);
 
       // callback for transport.get
       function processRemoteData(data) {
